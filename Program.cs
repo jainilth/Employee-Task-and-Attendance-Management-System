@@ -1,3 +1,5 @@
+using Employee_Task_and_Attendance_Management_System.Models;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,6 +19,8 @@ builder.Services.AddSwaggerGen(options =>
         Description = "Backend APIs for Employee Management System"
     });
 });
+
+builder.Services.AddDbContext<EmployeeTaskAttendanceDbContext>(options=>options.UseSqlServer(builder.Configuration.GetConnectionString("connectionString")));
 
 var app = builder.Build();
 
