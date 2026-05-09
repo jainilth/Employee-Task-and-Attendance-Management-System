@@ -1,11 +1,14 @@
-﻿using Employee_Task_and_Attendance_Management_System.DTOs.User;
+﻿using BCrypt.Net;
+using Employee_Task_and_Attendance_Management_System.DTOs.User;
 using Employee_Task_and_Attendance_Management_System.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Employee_Task_and_Attendance_Management_System.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/employee")]
+    [Authorize]
     public class UserController : ControllerBase
     {
 
@@ -16,6 +19,7 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
         }
 
         #region GetAllUsers
+        [Authorize(Roles = "Admin,Manager")]
         [HttpGet]
         public IActionResult GetUsers()
         {
@@ -33,6 +37,7 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
         #endregion
 
         #region GetUserById
+        [Authorize(Roles = "Admin,Manager,Employee")]
         [HttpGet("{id}")]
         public IActionResult GetUserById(int id)
         {
@@ -55,6 +60,7 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
         #endregion
 
         #region CreateUser
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public IActionResult CreateUser(UserCreateDto userCreateDto)
         {
@@ -67,7 +73,7 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
             {
                 Name = userCreateDto.Name,
                 Email = userCreateDto.Email,
-                PasswordHash = userCreateDto.PasswordHash,
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(userCreateDto.PasswordHash),
                 Role = userCreateDto.Role,
                 DepartmentId = userCreateDto.DepartmentId
             };
@@ -89,6 +95,7 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
         #endregion
 
         #region UpdateUser
+        [Authorize(Roles = "Admin,Employee")]
         [HttpPatch("{id}")]
         public IActionResult UpdateUser(int id, UserUpdateDto userUpdateDto)
         {
@@ -123,6 +130,7 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
         #endregion
 
         #region DeleteUser
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public IActionResult DeleteUser(int id)
         {

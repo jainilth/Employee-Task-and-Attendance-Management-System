@@ -1,11 +1,13 @@
 using Employee_Task_and_Attendance_Management_System.DTOs.Attendance;
 using Employee_Task_and_Attendance_Management_System.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Employee_Task_and_Attendance_Management_System.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class AttendanceController : ControllerBase
     {
         private readonly EmployeeTaskAttendanceDbContext context;
@@ -59,6 +61,7 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
         #endregion
 
         #region CreateAttendance
+        [Authorize(Roles = "Admin,Manager")]
         [HttpPost]
         public IActionResult CreateAttendance(CreateAttendanceDto createAttendanceDto)
         {
@@ -96,6 +99,7 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
         #endregion
 
         #region UpdateAttendance
+        [Authorize(Roles = "Admin,Manager")]
         [HttpPut("{id}")]
         public IActionResult UpdateAttendance(long id, UpdateAttendanceDto updateAttendanceDto)
         {
@@ -135,6 +139,7 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
         #endregion
 
         #region DeleteAttendance
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public IActionResult DeleteAttendance(long id)
         {

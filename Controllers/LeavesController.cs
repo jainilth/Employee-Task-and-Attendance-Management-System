@@ -1,11 +1,13 @@
 using Employee_Task_and_Attendance_Management_System.DTOs.Leaves;
 using Employee_Task_and_Attendance_Management_System.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Employee_Task_and_Attendance_Management_System.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class LeavesController : ControllerBase
     {
         private readonly EmployeeTaskAttendanceDbContext context;
@@ -59,6 +61,7 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
         #endregion
 
         #region CreateLeave
+        [Authorize(Roles = "Employee,Admin")]
         [HttpPost]
         public IActionResult CreateLeave(CreateLeafDto createLeafDto)
         {
@@ -96,6 +99,7 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
         #endregion
 
         #region UpdateLeave
+        [Authorize(Roles = "Employee,Admin")]
         [HttpPut("{id}")]
         public IActionResult UpdateLeave(long id, UpdateLeafDto updateLeafDto)
         {
@@ -135,6 +139,7 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
         #endregion
 
         #region DeleteLeave
+        [Authorize(Roles = "Admin,Employee")]
         [HttpDelete("{id}")]
         public IActionResult DeleteLeave(long id)
         {

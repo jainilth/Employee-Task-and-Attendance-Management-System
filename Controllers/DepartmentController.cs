@@ -1,12 +1,14 @@
 ﻿using Employee_Task_and_Attendance_Management_System.DTOs.Department;
 using Employee_Task_and_Attendance_Management_System.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Employee_Task_and_Attendance_Management_System.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/department")]
     [ApiController]
+    [Authorize]
     public class DepartmentController : ControllerBase
     {
         private readonly EmployeeTaskAttendanceDbContext context;
@@ -47,6 +49,7 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
         #endregion
 
         #region CreateDepartment
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public IActionResult CreateDepartment(CreateDepartmentDto createDepartmentDto)
         {
@@ -66,6 +69,7 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
         #endregion
 
         #region UpdateDepartment
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
         public IActionResult UpdateDepartment(int id, UpdateDepartmentDto updateDepartmentDto)
         {
@@ -86,8 +90,10 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
         #endregion
 
         #region DeleteDepartment
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
-        public IActionResult DeleteDepartment(int id) { 
+        public IActionResult DeleteDepartment(int id)
+        {
             var department = context.Departments.FirstOrDefault(d => d.Id == id);
             if (department == null)
             {

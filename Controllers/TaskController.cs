@@ -1,11 +1,13 @@
 ﻿using Employee_Task_and_Attendance_Management_System.DTOs.Tasks;
 using Employee_Task_and_Attendance_Management_System.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Employee_Task_and_Attendance_Management_System.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class TaskController : ControllerBase
     {
         private readonly EmployeeTaskAttendanceDbContext context;
@@ -63,6 +65,7 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
         #endregion
 
         #region CreateTask
+        [Authorize(Roles = "Admin,Manager")]
         [HttpPost]
         public IActionResult CreateTask(CreateTaskDto createTaskDto)
         {
@@ -104,6 +107,7 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
         #endregion
 
         #region UpdateTask
+        [Authorize(Roles = "Admin,Manager")]
         [HttpPut("{id}")]
         public IActionResult UpdateTask(long id, UpdateTaskDto updateTaskDto)
         {
@@ -146,8 +150,9 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
         #endregion
 
         #region AssignTaks
+        [Authorize(Roles = "Admin,Manager")]
         [HttpPut("{id}/assign")]
-        public IActionResult AssignTask(long id,long AssignTo)
+        public IActionResult AssignTask(long id, long AssignTo)
         {
             var task = context.Tasks.FirstOrDefault(item => item.Id == id);
             if (task == null)
@@ -177,6 +182,7 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
         #endregion
 
         #region DeleteTask
+        [Authorize(Roles = "Admin,Manager")]
         [HttpDelete("{id}")]
         public IActionResult DeleteTask(long id)
         {
