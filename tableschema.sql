@@ -106,7 +106,7 @@ CREATE TABLE dbo.Tasks
     Id          BIGINT IDENTITY(1,1) NOT NULL PRIMARY KEY,
     Title       NVARCHAR(200) NOT NULL,
     Description NVARCHAR(MAX) NULL,
-    AssignedTo  INT NOT NULL,
+    AssignedTo  INT NULL,
     AssignedBy  INT NOT NULL,
     Priority    NVARCHAR(20) NOT NULL,        -- Enum #3
     Status      NVARCHAR(20) NOT NULL,        -- Enum #4

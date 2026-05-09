@@ -89,7 +89,7 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
         #endregion
 
         #region UpdateUser
-        [HttpPut("{id}")]
+        [HttpPatch("{id}")]
         public IActionResult UpdateUser(int id, UserUpdateDto userUpdateDto)
         {
             var user = context.Users.FirstOrDefault(item => item.Id == id);
@@ -105,7 +105,6 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
 
             user.Name = userUpdateDto.Name;
             user.Email = userUpdateDto.Email;
-            user.PasswordHash = userUpdateDto.PasswordHash;
             user.Role = userUpdateDto.Role;
             user.DepartmentId = userUpdateDto.DepartmentId;
             context.SaveChanges();

@@ -25,10 +25,6 @@ public partial class EmployeeTaskAttendanceDbContext : DbContext
 
     public virtual DbSet<User> Users { get; set; }
 
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseSqlServer("Server=LAPTOP-J79V5T9B\\SQLEXPRESS;Database=EmployeeTaskAttendanceDB;Trusted_Connection=True;TrustServerCertificate=True;");
-
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Attendance>(entity =>
@@ -81,7 +77,7 @@ public partial class EmployeeTaskAttendanceDbContext : DbContext
 
         modelBuilder.Entity<Task>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Tasks__3214EC072ACF147A");
+            entity.HasKey(e => e.Id).HasName("PK__Tasks__3214EC0718C541D8");
 
             entity.HasIndex(e => e.AssignedBy, "IX_Tasks_AssignedBy");
 
@@ -91,7 +87,7 @@ public partial class EmployeeTaskAttendanceDbContext : DbContext
 
             entity.Property(e => e.CreatedAt)
                 .HasPrecision(0)
-                .HasDefaultValueSql("(sysutcdatetime())", "DF_Tasks_CreatedAt");
+                .HasDefaultValueSql("(sysutcdatetime())");
             entity.Property(e => e.Deadline).HasPrecision(0);
             entity.Property(e => e.Priority).HasMaxLength(20);
             entity.Property(e => e.Status).HasMaxLength(20);
@@ -104,7 +100,6 @@ public partial class EmployeeTaskAttendanceDbContext : DbContext
 
             entity.HasOne(d => d.AssignedToNavigation).WithMany(p => p.TaskAssignedToNavigations)
                 .HasForeignKey(d => d.AssignedTo)
-                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Tasks_AssignedTo_Users");
         });
 

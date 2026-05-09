@@ -11,7 +11,7 @@ public partial class Task
 
     public string? Description { get; set; }
 
-    public int AssignedTo { get; set; }
+    public int? AssignedTo { get; set; }
 
     public int AssignedBy { get; set; }
 
@@ -25,5 +25,5 @@ public partial class Task
 
     public virtual User AssignedByNavigation { get; set; } = null!;
 
-    public virtual User AssignedToNavigation { get; set; } = null!;
+    public virtual User? AssignedToNavigation { get; set; }
 }

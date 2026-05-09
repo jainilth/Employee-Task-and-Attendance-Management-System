@@ -66,7 +66,7 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
         [HttpPost]
         public IActionResult CreateTask(CreateTaskDto createTaskDto)
         {
-            if (!context.Users.Any(user => user.Id == createTaskDto.AssignedTo) || !context.Users.Any(user => user.Id == createTaskDto.AssignedBy))
+            if (!context.Users.Any(user => user.Id == createTaskDto.AssignedBy))
             {
                 return NotFound("Assigned user not found.");
             }
@@ -141,6 +141,37 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
                 CreatedAt = task.CreatedAt
             };
 
+            return Ok(response);
+        }
+        #endregion
+
+        #region AssignTaks
+        [HttpPut("{id}/assign")]
+        public IActionResult AssignTask(long id,long AssignTo)
+        {
+            var task = context.Tasks.FirstOrDefault(item => item.Id == id);
+            if (task == null)
+            {
+                return NotFound();
+            }
+            if (!context.Users.Any(user => user.Id == AssignTo))
+            {
+                return NotFound("Assigned user not found.");
+            }
+            task.AssignedTo = (int)AssignTo;
+            context.SaveChanges();
+            var response = new ResponseTaskDto
+            {
+                Id = task.Id,
+                Title = task.Title,
+                Description = task.Description,
+                AssignedTo = task.AssignedTo,
+                AssignedBy = task.AssignedBy,
+                Priority = task.Priority,
+                Status = task.Status,
+                Deadline = task.Deadline,
+                CreatedAt = task.CreatedAt
+            };
             return Ok(response);
         }
         #endregion
