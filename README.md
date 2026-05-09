@@ -37,7 +37,7 @@ A comprehensive employee management system built with ASP.NET Core that handles 
 - Assign or change user department
 - Assign or change user role
 - Keep user email unique
-- **Status**: ✅ Done
+- **Status**: 🟡 Partially Done (CRUD done, role/department assignment still missing)
 
 ### 1.4 Attendance Management
 - Employee check-in
@@ -91,27 +91,33 @@ A comprehensive employee management system built with ASP.NET Core that handles 
 
 ## API Endpoints
 
-### Complete Endpoint Mapping (30 Total)
+### Complete Endpoint Mapping (41 Total)
 
 | Endpoint | Method | Purpose | Allowed Roles | Status |
 |---|---|---|---|---|
 | **Authentication** |
-| /api/auth/login | POST | Authenticate user | Anonymous | ✅ |
+| /api/auth/register | POST | Create user account | Admin | ❌ |
+| /api/auth/login | POST | Authenticate user | Admin, Manager, Employee | ✅ |
+| /api/auth/me | GET | Get current profile | Admin, Manager, Employee | ❌ |
 | **Departments** |
-| /api/department | GET | List departments | Admin, Manager, Employee | ✅ |
-| /api/department/{id} | GET | Get department by id | Admin, Manager, Employee | ✅ |
-| /api/department | POST | Create department | Admin | ✅ |
-| /api/department/{id} | PUT | Update department | Admin | ✅ |
-| /api/department/{id} | DELETE | Delete department | Admin | ✅ |
+| /api/departments | GET | List departments | Admin, Manager, Employee | ✅ |
+| /api/departments/{id} | GET | Get department by id | Admin, Manager, Employee | ✅ |
+| /api/departments | POST | Create department | Admin | ✅ |
+| /api/departments/{id} | PUT | Update department | Admin | ✅ |
+| /api/departments/{id} | DELETE | Delete department | Admin | ✅ |
 | **Users** |
-| /api/employee | GET | List users | Admin, Manager | ✅ |
-| /api/employee/{id} | GET | Get user by id | Admin, Manager, Employee | ✅ |
-| /api/employee | POST | Create user | Admin | ✅ |
-| /api/employee/{id} | PATCH | Update user profile | Admin, Employee | ✅ |
-| /api/employee/{id} | DELETE | Delete user | Admin | ✅ |
+| /api/users | GET | List users | Admin, Manager | ✅ |
+| /api/users/{id} | GET | Get user by id | Admin, Manager, Employee self | ✅ |
+| /api/users | POST | Create user | Admin | ✅ |
+| /api/users/{id} | PUT | Update user profile | Admin, Employee self | ✅ |
+| /api/users/{id}/role | PATCH | Change role | Admin | ❌ |
+| /api/users/{id}/department | PATCH | Change department | Admin | ❌ |
+| /api/users/{id} | DELETE | Delete user | Admin | ✅ |
 | **Attendance** |
 | /api/attendance | GET | List attendance records | Admin, Manager, Employee self | ✅ |
 | /api/attendance/{id} | GET | Get attendance by id | Admin, Manager, Employee self | ✅ |
+| /api/attendance/checkin | POST | Check-in | Employee self, Admin | ❌ |
+| /api/attendance/checkout | POST | Check-out | Employee self, Admin | ❌ |
 | /api/attendance | POST | Manual attendance create | Admin, Manager | ✅ |
 | /api/attendance/{id} | PUT | Update attendance | Admin, Manager | ✅ |
 | /api/attendance/{id} | DELETE | Delete attendance | Admin | ✅ |
@@ -120,13 +126,16 @@ A comprehensive employee management system built with ASP.NET Core that handles 
 | /api/tasks/{id} | GET | Get task by id | Admin, Manager, Employee assigned or created by self | ✅ |
 | /api/tasks | POST | Create task | Admin, Manager | ✅ |
 | /api/tasks/{id} | PUT | Update task details | Admin, Manager | ✅ |
-| /api/tasks/{id}/assign | PUT | Assign or reassign task | Admin, Manager | ✅ |
+| /api/tasks/{id}/assign | PATCH | Assign or reassign task | Admin, Manager | ✅ |
+| /api/tasks/{id}/status | PATCH | Update task status | Admin, Manager, Employee assigned | ❌ |
 | /api/tasks/{id} | DELETE | Delete task | Admin, Manager | ✅ |
 | **Leaves** |
 | /api/leaves | GET | List leave requests | Admin, Manager, Employee self | ✅ |
 | /api/leaves/{id} | GET | Get leave request by id | Admin, Manager, Employee self | ✅ |
 | /api/leaves | POST | Apply leave | Employee self, Admin | ✅ |
 | /api/leaves/{id} | PUT | Update leave details | Employee self while Pending, Admin | ✅ |
+| /api/leaves/{id}/approve | PATCH | Approve leave | Admin, Manager | ❌ |
+| /api/leaves/{id}/reject | PATCH | Reject leave | Admin, Manager | ❌ |
 | /api/leaves/{id} | DELETE | Delete leave request | Admin, Employee self while Pending | ✅ |
 | **Reporting** |
 | /api/reports/attendance/monthly | GET | Monthly attendance report | Admin, Manager | ❌ |
@@ -232,30 +241,32 @@ A comprehensive employee management system built with ASP.NET Core that handles 
 ## Implementation Status
 
 ### Summary
-- **Total Endpoints Documented**: 30
+- **Total MVP Endpoints**: 39
 - **Implemented**: 27 ✅
-- **Not Started**: 3 ❌
+- **Not Started**: 12 ❌
 
 ### Completed Areas
 | Area | Status | Endpoints |
 | --- | --- | --- |
 | Department Management | ✅ Done | 5/5 |
-| User and Employee Management | ✅ Done | 5/5 |
-| Attendance Management | 🟡 Partial | 5/5 |
-| Task Management | 🟡 Partial | 6/6 |
-| Leave Management | 🟡 Partial | 5/5 |
+| User and Employee Management | 🟡 Partial | 5/7 |
+| Attendance Management | 🟡 Partial | 5/7 |
+| Task Management | 🟡 Partial | 6/7 |
+| Leave Management | 🟡 Partial | 5/7 |
 
-### Remaining Roadmap Items
-- The endpoint table above documents the current exposed API surface.
+### Missing Implementations
+- ❌ Authentication register and profile endpoints (2 endpoints)
 - ❌ Reporting (3 endpoints)
+- ❌ User role/department assignment endpoints (2 endpoints)
 - ❌ Attendance check-in/checkout (2 endpoints)
 - ❌ Task status-only update (1 endpoint)
 - ❌ Leave approval/rejection (2 endpoints)
-- ❌ Self-ownership enforcement for employee-only reads and updates
+- ❌ Various role-based access control implementations
 
 ### Next Steps
-1. Implement the remaining auth endpoints (`register` and `me`)
-2. Add self-ownership checks for employee-only reads and updates
+1. Implement the remaining authentication endpoints (`register` and `me`)
+2. Add role-based access control decorators to existing endpoints
 3. Implement check-in/checkout workflows for attendance
 4. Add approval/rejection workflows for leaves
 5. Implement reporting endpoints
+6. Add endpoint-specific role restrictions
