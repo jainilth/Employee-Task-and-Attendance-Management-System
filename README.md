@@ -15,11 +15,10 @@ A comprehensive employee management system built with ASP.NET Core that handles 
 ## Core Functionalities
 
 ### 1.1 Authentication and Identity
-- User registration
 - User login
 - Session identity lookup
 - Role-based authorization using user role values
-- **Status**: 🟡 Partially Done (login implemented, register/me still missing)
+- **Status**: ✅ Done
 
 ### 1.2 Department Management
 - Create department
@@ -37,7 +36,7 @@ A comprehensive employee management system built with ASP.NET Core that handles 
 - Assign or change user department
 - Assign or change user role
 - Keep user email unique
-- **Status**: 🟡 Partially Done (CRUD done, role/department assignment still missing)
+- **Status**: ✅ Done
 
 ### 1.4 Attendance Management
 - Employee check-in
@@ -46,7 +45,7 @@ A comprehensive employee management system built with ASP.NET Core that handles 
 - Attendance history listing and filtering
 - Attendance status management
 - Enforce one attendance record per employee per date
-- **Status**: 🟡 Partially Done (CRUD exists, check-in/out missing)
+- **Status**: ✅ Done
 
 ### 1.5 Task Management
 - Create task
@@ -91,14 +90,13 @@ A comprehensive employee management system built with ASP.NET Core that handles 
 
 ## API Endpoints
 
-### Complete Endpoint Mapping (41 Total)
+### Complete Endpoint Mapping (40 Total)
 
 | Endpoint | Method | Purpose | Allowed Roles | Status |
 |---|---|---|---|---|
 | **Authentication** |
-| /api/auth/register | POST | Create user account | Admin | ❌ |
 | /api/auth/login | POST | Authenticate user | Admin, Manager, Employee | ✅ |
-| /api/auth/me | GET | Get current profile | Admin, Manager, Employee | ❌ |
+| /api/auth/me | GET | Get current profile | Admin, Manager, Employee | ✅ |
 | **Departments** |
 | /api/departments | GET | List departments | Admin, Manager, Employee | ✅ |
 | /api/departments/{id} | GET | Get department by id | Admin, Manager, Employee | ✅ |
@@ -110,14 +108,14 @@ A comprehensive employee management system built with ASP.NET Core that handles 
 | /api/users/{id} | GET | Get user by id | Admin, Manager, Employee self | ✅ |
 | /api/users | POST | Create user | Admin | ✅ |
 | /api/users/{id} | PUT | Update user profile | Admin, Employee self | ✅ |
-| /api/users/{id}/role | PATCH | Change role | Admin | ❌ |
-| /api/users/{id}/department | PATCH | Change department | Admin | ❌ |
+| /api/users/{id}/role | PATCH | Change role | Admin | ✅ |
+| /api/users/{id}/department | PATCH | Change department | Admin | ✅ |
 | /api/users/{id} | DELETE | Delete user | Admin | ✅ |
 | **Attendance** |
 | /api/attendance | GET | List attendance records | Admin, Manager, Employee self | ✅ |
 | /api/attendance/{id} | GET | Get attendance by id | Admin, Manager, Employee self | ✅ |
-| /api/attendance/checkin | POST | Check-in | Employee self, Admin | ❌ |
-| /api/attendance/checkout | POST | Check-out | Employee self, Admin | ❌ |
+| /api/attendance/checkin | POST | Check-in | Employee self, Admin | ✅ |
+| /api/attendance/checkout | POST | Check-out | Employee self, Admin | ✅ |
 | /api/attendance | POST | Manual attendance create | Admin, Manager | ✅ |
 | /api/attendance/{id} | PUT | Update attendance | Admin, Manager | ✅ |
 | /api/attendance/{id} | DELETE | Delete attendance | Admin | ✅ |
@@ -242,31 +240,25 @@ A comprehensive employee management system built with ASP.NET Core that handles 
 
 ### Summary
 - **Total MVP Endpoints**: 39
-- **Implemented**: 27 ✅
-- **Not Started**: 12 ❌
+- **Implemented**: 32 ✅
+- **Not Started**: 7 ❌
 
 ### Completed Areas
 | Area | Status | Endpoints |
 | --- | --- | --- |
 | Department Management | ✅ Done | 5/5 |
-| User and Employee Management | 🟡 Partial | 5/7 |
-| Attendance Management | 🟡 Partial | 5/7 |
+| User and Employee Management | ✅ Done | 7/7 |
+| Attendance Management | ✅ Done | 7/7 |
 | Task Management | 🟡 Partial | 6/7 |
 | Leave Management | 🟡 Partial | 5/7 |
 
 ### Missing Implementations
-- ❌ Authentication register and profile endpoints (2 endpoints)
-- ❌ Reporting (3 endpoints)
-- ❌ User role/department assignment endpoints (2 endpoints)
 - ❌ Attendance check-in/checkout (2 endpoints)
 - ❌ Task status-only update (1 endpoint)
 - ❌ Leave approval/rejection (2 endpoints)
 - ❌ Various role-based access control implementations
+- ❌ Reporting (3 endpoints)
 
 ### Next Steps
-1. Implement the remaining authentication endpoints (`register` and `me`)
-2. Add role-based access control decorators to existing endpoints
-3. Implement check-in/checkout workflows for attendance
-4. Add approval/rejection workflows for leaves
-5. Implement reporting endpoints
-6. Add endpoint-specific role restrictions
+1. Add approval/rejection workflows for leaves
+2. Implement reporting endpoints

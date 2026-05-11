@@ -2,7 +2,6 @@
 using Employee_Task_and_Attendance_Management_System.DTOs.Auth;
 using Employee_Task_and_Attendance_Management_System.Models;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -44,6 +43,35 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
 
             var token = GenerateToken(user);
             return Ok(new { token, user.Id, user.Role });
+        }
+
+        [HttpGet("me")]
+        public IActionResult Me()
+        {
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (!int.TryParse(userIdClaim, out var userId))
+            {
+                return Unauthorized();
+            }
+
+            var user = context.Users.FirstOrDefault(item => item.Id == userId);
+
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            var profile = new Me
+            {
+                Id = user.Id,
+                Name = user.Name,
+                Email = user.Email,
+                Role = user.Role,
+                DepartmentId = user.DepartmentId
+            };
+
+            return Ok(profile);
         }
 
         private string GenerateToken(User user)

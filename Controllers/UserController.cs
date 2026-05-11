@@ -3,6 +3,7 @@ using Employee_Task_and_Attendance_Management_System.DTOs.User;
 using Employee_Task_and_Attendance_Management_System.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Data;
 
 namespace Employee_Task_and_Attendance_Management_System.Controllers
 {
@@ -144,6 +145,56 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
             context.SaveChanges();
 
             return NoContent();
+        }
+        #endregion
+
+        #region AssignRole
+        [Authorize(Roles = "Admin")]
+        [HttpPatch("{id}/role")]
+        public IActionResult AssignRole(int id,string role) {
+            var user = context.Users.FirstOrDefault(item => item.Id == id);
+            if (user == null)
+            {
+                return NotFound();
+            }
+            user.Role = role;
+            context.SaveChanges();
+
+            var response = new UserResponseDto
+            {
+                Id = user.Id,
+                Name = user.Name,
+                Email = user.Email,
+                Role = user.Role,
+                DepartmentId = user.DepartmentId
+            };
+
+            return Ok(response);
+        }
+        #endregion
+
+        #region AssignDepartment
+        [Authorize(Roles = "Admin")]
+        [HttpPatch("{id}/department")]
+        public IActionResult AssignDepartment(int id, int departmentId) {
+            var user = context.Users.FirstOrDefault(item => item.Id == id);
+            if (user == null)
+            {
+                return NotFound();
+            }
+            user.DepartmentId = departmentId;
+            context.SaveChanges();
+
+            var response = new UserResponseDto
+            {
+                Id = user.Id,
+                Name = user.Name,
+                Email = user.Email,
+                Role = user.Role,
+                DepartmentId = user.DepartmentId
+            };
+
+            return Ok(response);
         }
         #endregion
     }

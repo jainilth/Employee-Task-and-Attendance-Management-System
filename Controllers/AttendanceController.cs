@@ -2,6 +2,7 @@ using Employee_Task_and_Attendance_Management_System.DTOs.Attendance;
 using Employee_Task_and_Attendance_Management_System.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace Employee_Task_and_Attendance_Management_System.Controllers
 {
@@ -57,6 +58,83 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
             }
 
             return Ok(attendance);
+        }
+        #endregion
+
+        #region CheckIn
+        [Authorize]
+        [HttpPost("checkin")]
+        public IActionResult CheckIn()
+        {
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (!int.TryParse(userIdClaim, out var employeeId))
+            {
+                return Unauthorized();
+            }
+
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+
+            if (context.Attendances.Any(attendance => attendance.EmployeeId == employeeId && attendance.Date == today))
+            {
+                return Conflict("Attendance already exists for today.");
+            }
+
+            var attendanceRecord = new Attendance
+            {
+                EmployeeId = employeeId,
+                CheckIn = DateTime.UtcNow,
+                CheckOut = null,
+                WorkingHours = null,
+                Status = "Present",
+                Date = today
+            };
+
+            context.Attendances.Add(attendanceRecord);
+            context.SaveChanges();
+
+            return Ok(ToResponseAttendanceDto(attendanceRecord));
+        }
+        #endregion
+
+        #region CheckOut
+        [Authorize]
+        [HttpPost("checkout")]
+        public IActionResult CheckOut()
+        {
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (!int.TryParse(userIdClaim, out var employeeId))
+            {
+                return Unauthorized();
+            }
+
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            var attendanceRecord = context.Attendances.FirstOrDefault(attendance => attendance.EmployeeId == employeeId && attendance.Date == today);
+
+            if (attendanceRecord == null)
+            {
+                return NotFound("Attendance record not found for today.");
+            }
+
+            if (attendanceRecord.CheckOut.HasValue)
+            {
+                return Conflict("Attendance already checked out.");
+            }
+
+            var checkOutTime = DateTime.UtcNow;
+
+            if (checkOutTime < attendanceRecord.CheckIn)
+            {
+                return BadRequest("Check-out time cannot be earlier than check-in time.");
+            }
+
+            attendanceRecord.CheckOut = checkOutTime;
+            attendanceRecord.WorkingHours = Math.Round((decimal)(attendanceRecord.CheckOut.Value - attendanceRecord.CheckIn).TotalHours, 2);
+
+            context.SaveChanges();
+
+            return Ok(ToResponseAttendanceDto(attendanceRecord));
         }
         #endregion
 
@@ -155,5 +233,19 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
             return NoContent();
         }
         #endregion
+
+        private static ResponseAttendanceDto ToResponseAttendanceDto(Attendance attendance)
+        {
+            return new ResponseAttendanceDto
+            {
+                Id = attendance.Id,
+                EmployeeId = attendance.EmployeeId,
+                CheckIn = attendance.CheckIn,
+                CheckOut = attendance.CheckOut,
+                WorkingHours = attendance.WorkingHours,
+                Status = attendance.Status,
+                Date = attendance.Date
+            };
+        }
     }
 }
