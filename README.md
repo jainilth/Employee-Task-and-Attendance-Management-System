@@ -96,7 +96,6 @@ A comprehensive employee management system built with ASP.NET Core that handles 
 | Endpoint | Method | Purpose | Allowed Roles | Status |
 |---|---|---|---|---|
 | **Authentication** |
-| /api/auth/register | POST | Create user account | Admin | ❌ |
 | /api/auth/login | POST | Authenticate user | Admin, Manager, Employee | ✅ |
 | /api/auth/me | GET | Get current profile | Admin, Manager, Employee | ❌ |
 | **Departments** |
