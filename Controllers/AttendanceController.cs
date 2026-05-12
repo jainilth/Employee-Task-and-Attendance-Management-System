@@ -146,7 +146,7 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
         #endregion
 
         #region CheckOut
-        [HttpPost("checkout")]
+        [HttpPatch("checkout")]
         public IActionResult CheckOut()
         {
             var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
