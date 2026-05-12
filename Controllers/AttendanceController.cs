@@ -195,6 +195,13 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
                 return NotFound("Employee not found.");
             }
 
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+
+            if (context.Attendances.Any(attendance => attendance.EmployeeId == createAttendanceDto.EmployeeId && attendance.Date == today))
+            {
+                return Conflict("Attendance already exists for today.");
+            }
+
             var attendance = new Attendance
             {
                 EmployeeId = createAttendanceDto.EmployeeId,
@@ -295,6 +302,7 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
         }
         #endregion
 
+        #region Response
         private static ResponseAttendanceDto ToResponseAttendanceDto(Attendance attendance)
         {
             return new ResponseAttendanceDto
@@ -308,5 +316,6 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
                 Date = attendance.Date
             };
         }
+        #endregion
     }
 }

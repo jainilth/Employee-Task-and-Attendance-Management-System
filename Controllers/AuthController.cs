@@ -23,6 +23,7 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
             context = _context;
         }
 
+        #region Login
         [AllowAnonymous]
         [HttpPost("login")]
         public IActionResult Login(LoginDto logindto)
@@ -44,7 +45,9 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
             var token = GenerateToken(user);
             return Ok(new { token, user.Id, user.Role });
         }
+        #endregion
 
+        #region self
         [HttpGet("me")]
         public IActionResult Me()
         {
@@ -73,7 +76,9 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
 
             return Ok(profile);
         }
+        #endregion
 
+        #region GenerateToken
         private string GenerateToken(User user)
         {
             var claims = new[]
@@ -101,5 +106,6 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
+        #endregion
     }
 }
