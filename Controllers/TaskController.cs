@@ -181,6 +181,33 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
         }
         #endregion
 
+        #region UpdateTaskStatus
+        [HttpPatch("{id}/{status}")]
+        public IActionResult UpdateTaskStatus(int id,string status)
+        {
+            var task = context.Tasks.FirstOrDefault(item => item.Id == id);
+            if (task == null)
+            {
+                return NotFound();
+            }
+            task.Status = status;
+            context.SaveChanges();
+            var response = new ResponseTaskDto
+            {
+                Id = task.Id,
+                Title = task.Title,
+                Description = task.Description,
+                AssignedTo = task.AssignedTo,
+                AssignedBy = task.AssignedBy,
+                Priority = task.Priority,
+                Status = task.Status,
+                Deadline = task.Deadline,
+                CreatedAt = task.CreatedAt
+            };
+            return Ok(response);
+        }
+        #endregion
+
         #region DeleteTask
         [Authorize(Roles = "Admin,Manager")]
         [HttpDelete("{id}")]

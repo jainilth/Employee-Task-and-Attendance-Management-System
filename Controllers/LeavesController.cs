@@ -138,6 +138,61 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
         }
         #endregion
 
+        #region ApproveLeave
+        [Authorize(Roles = "Admin,Manager")]
+        [HttpPatch("{id}/approve")]
+        public IActionResult ApproveLeave(int id) {
+            var leave = context.Leaves.FirstOrDefault(item => item.Id == id);
+            if (leave == null)
+            {
+                return NotFound();
+            }
+            leave.Status = "Approved";
+            context.SaveChanges();
+
+            var response = new ResponseLeafDto
+            {
+                Id = leave.Id,
+                EmployeeId = leave.EmployeeId,
+                LeaveType = leave.LeaveType,
+                StartDate = leave.StartDate,
+                EndDate = leave.EndDate,
+                Reason = leave.Reason,
+                Status = leave.Status
+            };
+
+            return Ok(response);
+        }
+        #endregion
+
+        #region RejectLeave
+        [Authorize(Roles = "Admin,Manager")]
+        [HttpPatch("{id}/reject")]
+        public IActionResult RejectLeave(int id)
+        {
+            var leave = context.Leaves.FirstOrDefault(item => item.Id == id);
+            if (leave == null)
+            {
+                return NotFound();
+            }
+            leave.Status = "Rejected";
+            context.SaveChanges();
+
+            var response = new ResponseLeafDto
+            {
+                Id = leave.Id,
+                EmployeeId = leave.EmployeeId,
+                LeaveType = leave.LeaveType,
+                StartDate = leave.StartDate,
+                EndDate = leave.EndDate,
+                Reason = leave.Reason,
+                Status = leave.Status
+            };
+
+            return Ok(response);
+        }
+        #endregion
+
         #region DeleteLeave
         [Authorize(Roles = "Admin,Employee")]
         [HttpDelete("{id}")]
