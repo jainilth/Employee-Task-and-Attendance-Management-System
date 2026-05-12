@@ -19,6 +19,7 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
         }
 
         #region GetAllAttendances
+        [Authorize(Roles ="Admin,Manager")]
         [HttpGet]
         public IActionResult GetAttendances()
         {
@@ -37,11 +38,34 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
         }
         #endregion
 
-        #region GetAttendanceById
-        [HttpGet("{id}")]
-        public IActionResult GetAttendanceById(long id)
+        #region GetallAttendenceSelf
+        [HttpGet("self")]
+        public IActionResult GetMyAttendance() {
+            var Id=User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if(!int.TryParse(Id, out var id))
+            {
+                return Unauthorized();
+            }
+            var Attendence = context.Attendances.Where(at => at.EmployeeId == id).Select(attendance => new ResponseAttendanceDto
+            {
+                Id = attendance.Id,
+                EmployeeId = attendance.EmployeeId,
+                CheckIn = attendance.CheckIn,
+                CheckOut = attendance.CheckOut,
+                WorkingHours = attendance.WorkingHours,
+                Status = attendance.Status,
+                Date = attendance.Date
+            }).ToList();
+            return Ok(Attendence);
+        }
+        #endregion
+
+        #region GetAttendancePerEmployee
+        [Authorize(Roles ="Admin,Manager")]
+        [HttpGet("{id}/employee")]
+        public IActionResult GetAttendanceByEmployeeId(long id)
         {
-            var attendance = context.Attendances.Select(item => new ResponseAttendanceDto
+            var attendance = context.Attendances.Where(item => item.EmployeeId == id).Select(item => new ResponseAttendanceDto
             {
                 Id = item.Id,
                 EmployeeId = item.EmployeeId,
@@ -50,7 +74,32 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
                 WorkingHours = item.WorkingHours,
                 Status = item.Status,
                 Date = item.Date
-            }).FirstOrDefault(item => item.Id == id);
+            });
+
+            if (attendance == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(attendance);
+        }
+        #endregion
+
+        #region GetAttendancePerEmployeeAndDate
+        [Authorize(Roles ="Admin,Manager")]
+        [HttpGet("{id}/employee/{date}")]
+        public IActionResult GetAttendanceByEmployeeIdAndDate(long id,DateOnly date)
+        {
+            var attendance = context.Attendances.Where(item => item.EmployeeId == id&&item.Date==date).Select(item => new ResponseAttendanceDto
+            {
+                Id = item.Id,
+                EmployeeId = item.EmployeeId,
+                CheckIn = item.CheckIn,
+                CheckOut = item.CheckOut,
+                WorkingHours = item.WorkingHours,
+                Status = item.Status,
+                Date = item.Date
+            });
 
             if (attendance == null)
             {
@@ -62,7 +111,6 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
         #endregion
 
         #region CheckIn
-        [Authorize]
         [HttpPost("checkin")]
         public IActionResult CheckIn()
         {
@@ -98,7 +146,6 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
         #endregion
 
         #region CheckOut
-        [Authorize]
         [HttpPost("checkout")]
         public IActionResult CheckOut()
         {
@@ -153,10 +200,11 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
                 EmployeeId = createAttendanceDto.EmployeeId,
                 CheckIn = createAttendanceDto.CheckIn,
                 CheckOut = createAttendanceDto.CheckOut,
-                WorkingHours = createAttendanceDto.WorkingHours,
+                WorkingHours = Math.Round((decimal)(createAttendanceDto.CheckOut.Value - createAttendanceDto.CheckIn).TotalHours, 2),
                 Status = createAttendanceDto.Status,
                 Date = createAttendanceDto.Date
             };
+
 
             context.Attendances.Add(attendance);
             context.SaveChanges();
@@ -176,28 +224,41 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
         }
         #endregion
 
-        #region UpdateAttendance
+        #region UpdateAttendanceStatusOfEmployee
         [Authorize(Roles = "Admin,Manager")]
-        [HttpPut("{id}")]
-        public IActionResult UpdateAttendance(long id, UpdateAttendanceDto updateAttendanceDto)
+        [HttpPatch("{id}/employee/{date}/{status}")]
+        public IActionResult UpdateAttendance(int id,DateOnly date,string status)
         {
-            var attendance = context.Attendances.FirstOrDefault(item => item.Id == id);
-            if (attendance == null)
-            {
-                return NotFound();
-            }
-
-            if (!context.Users.Any(user => user.Id == updateAttendanceDto.EmployeeId))
+            if (!context.Users.Any(u => u.Id == id))
             {
                 return NotFound("Employee not found.");
             }
 
-            attendance.EmployeeId = updateAttendanceDto.EmployeeId;
-            attendance.CheckIn = updateAttendanceDto.CheckIn;
-            attendance.CheckOut = updateAttendanceDto.CheckOut;
-            attendance.WorkingHours = updateAttendanceDto.WorkingHours;
-            attendance.Status = updateAttendanceDto.Status;
-            attendance.Date = updateAttendanceDto.Date;
+            var attendance =context.Attendances
+                .FirstOrDefault(a => a.EmployeeId == id&&a.Date==date);
+
+            if (attendance == null)
+            {
+                return NotFound("Attendance record not found.");
+            }
+
+            var validStatuses = new[]
+            {
+                "Present",
+                "Absent",
+                "Late",
+                "HalfDay",
+                "OnLeave"
+            };
+
+            status = status.Trim();
+
+            if (!validStatuses.Contains(status))
+            {
+                return BadRequest("Invalid status.");
+            }
+
+            attendance.Status = status;
 
             context.SaveChanges();
 
@@ -217,7 +278,7 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
         #endregion
 
         #region DeleteAttendance
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Manager")]
         [HttpDelete("{id}")]
         public IActionResult DeleteAttendance(long id)
         {

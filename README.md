@@ -253,7 +253,6 @@ A comprehensive employee management system built with ASP.NET Core that handles 
 | Leave Management | 🟡 Partial | 5/7 |
 
 ### Missing Implementations
-- ❌ Attendance check-in/checkout (2 endpoints)
 - ❌ Task status-only update (1 endpoint)
 - ❌ Leave approval/rejection (2 endpoints)
 - ❌ Various role-based access control implementations
