@@ -59,7 +59,7 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
 
         #region GetLeaveById
         [Authorize(Roles = "Admin,Manager")]
-        [HttpGet("{id}")]
+        [HttpGet("{id:long}")]
         public IActionResult GetLeaveById(long id)
         {
             var leave = context.Leaves.FirstOrDefault(item => item.Id == id);
@@ -127,7 +127,7 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
 
         #region UpdateLeave
         [Authorize(Roles = "Admin")]
-        [HttpPut("{id}")]
+        [HttpPut("{id:long}")]
         public IActionResult UpdateLeave(long id, UpdateLeafDto updateLeafDto)
         {
             var leave = context.Leaves.FirstOrDefault(item => item.Id == id);
@@ -156,8 +156,8 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
 
         #region ApproveLeave
         [Authorize(Roles = "Admin,Manager")]
-        [HttpPatch("{id}/approve")]
-        public IActionResult ApproveLeave(int id)
+        [HttpPatch("{id:long}/approve")]
+        public IActionResult ApproveLeave(long id)
         {
             var leave = context.Leaves.FirstOrDefault(item => item.Id == id);
             if (leave == null)
@@ -173,8 +173,8 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
 
         #region RejectLeave
         [Authorize(Roles = "Admin,Manager")]
-        [HttpPatch("{id}/reject")]
-        public IActionResult RejectLeave(int id)
+        [HttpPatch("{id:long}/reject")]
+        public IActionResult RejectLeave(long id)
         {
             var leave = context.Leaves.FirstOrDefault(item => item.Id == id);
             if (leave == null)
@@ -190,7 +190,7 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
 
         #region DeleteLeave
         [Authorize(Roles = "Admin,Employee")]
-        [HttpDelete("{id}")]
+        [HttpDelete("{id:long}")]
         public IActionResult DeleteLeave(long id)
         {
             var leave = context.Leaves.FirstOrDefault(item => item.Id == id);
