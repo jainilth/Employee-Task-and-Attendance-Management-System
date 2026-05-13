@@ -70,7 +70,7 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
 
         #region UpdateDepartment
         [Authorize(Roles = "Admin")]
-        [HttpPut("{id}")]
+        [HttpPatch("{id}")]
         public IActionResult UpdateDepartment(int id, UpdateDepartmentDto updateDepartmentDto)
         {
             var department = context.Departments.FirstOrDefault(d => d.Id == id);

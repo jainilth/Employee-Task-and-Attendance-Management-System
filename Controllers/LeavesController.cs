@@ -2,6 +2,7 @@ using Employee_Task_and_Attendance_Management_System.DTOs.Leaves;
 using Employee_Task_and_Attendance_Management_System.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace Employee_Task_and_Attendance_Management_System.Controllers
 {
@@ -18,6 +19,7 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
         }
 
         #region GetAllLeaves
+        [Authorize(Roles ="Admin,Manager")]
         [HttpGet]
         public IActionResult GetLeaves()
         {
@@ -36,7 +38,38 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
         }
         #endregion
 
+        #region GetLeaveSelf
+        [HttpGet("self")]
+        public IActionResult GetLeaveById()
+        {
+            var Id = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if(!int.TryParse(Id,out var eid))
+            {
+                return Unauthorized();
+            }
+
+            var leave = context.Leaves.Where(item => item.EmployeeId == eid).Select(item => new ResponseLeafDto
+            {
+                Id = item.Id,
+                EmployeeId = item.EmployeeId,
+                LeaveType = item.LeaveType,
+                StartDate = item.StartDate,
+                EndDate = item.EndDate,
+                Reason = item.Reason,
+                Status = item.Status
+            });
+
+            if (leave == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(leave);
+        }
+        #endregion
+
         #region GetLeaveById
+        [Authorize(Roles ="Admmin,Manager")]
         [HttpGet("{id}")]
         public IActionResult GetLeaveById(long id)
         {
@@ -61,7 +94,7 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
         #endregion
 
         #region CreateLeave
-        [Authorize(Roles = "Employee,Admin")]
+        [Authorize(Roles = "Admin,Manager")]
         [HttpPost]
         public IActionResult CreateLeave(CreateLeafDto createLeafDto)
         {
@@ -98,8 +131,43 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
         }
         #endregion
 
+        #region ApplyForLeave
+        [HttpPost("apply")]
+        public IActionResult ApplyForLeave(ApplayLeaveDto applaydto)
+        {
+            var id=User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if(!int.TryParse(id, out var Id))
+            {
+                return Unauthorized();
+            }
+            var leave = new Leaf
+            {
+                EmployeeId = Id,
+                LeaveType = applaydto.LeaveType,
+                StartDate = applaydto.StartDate,
+                EndDate = applaydto.EndDate,
+                Reason = applaydto.Reason,
+                Status = "Pending"
+            };
+            context.Leaves.Add(leave);
+            context.SaveChanges();
+
+            var response = new ResponseLeafDto
+            {
+                Id = leave.Id,
+                EmployeeId = leave.EmployeeId,
+                LeaveType = leave.LeaveType,
+                StartDate = leave.StartDate,
+                EndDate = leave.EndDate,
+                Reason = leave.Reason,
+                Status = leave.Status
+            };
+            return Ok(response);
+        }
+        #endregion
+
         #region UpdateLeave
-        [Authorize(Roles = "Employee,Admin")]
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
         public IActionResult UpdateLeave(long id, UpdateLeafDto updateLeafDto)
         {

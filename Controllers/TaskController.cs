@@ -2,6 +2,8 @@
 using Employee_Task_and_Attendance_Management_System.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Net.NetworkInformation;
+using System.Security.Claims;
 
 namespace Employee_Task_and_Attendance_Management_System.Controllers
 {
@@ -18,6 +20,7 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
         }
 
         #region GetAllTasks
+        [Authorize(Roles ="Admin,Manager")]
         [HttpGet]
         public IActionResult GetTasks()
         {
@@ -38,7 +41,41 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
         }
         #endregion
 
+        #region GetMyTask
+        [Authorize(Roles = "Admin,Manager")]
+        [HttpGet("my")]
+        public IActionResult GetMyTask()
+        {
+            var eid = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(eid, out var empid))
+            {
+                return Unauthorized();
+            }
+
+            var tasks = context.Tasks.Where(item => item.AssignedTo == empid).Select(item => new ResponseTaskDto
+            {
+                Id = item.Id,
+                Title = item.Title,
+                Description = item.Description,
+                AssignedTo = item.AssignedTo,
+                AssignedBy = item.AssignedBy,
+                Priority = item.Priority,
+                Status = item.Status,
+                Deadline = item.Deadline,
+                CreatedAt = item.CreatedAt
+            });
+            
+            if (tasks == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(tasks);
+        }
+        #endregion
+
         #region GetTaskById
+        [Authorize(Roles ="Admin,Manager")]
         [HttpGet("{id}")]
         public IActionResult GetTaskById(long id)
         {
@@ -69,9 +106,10 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
         [HttpPost]
         public IActionResult CreateTask(CreateTaskDto createTaskDto)
         {
-            if (!context.Users.Any(user => user.Id == createTaskDto.AssignedBy))
+            var id = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if(!int.TryParse(id,out var eid))
             {
-                return NotFound("Assigned user not found.");
+                return Unauthorized();
             }
 
             var task = new Models.Task
@@ -79,9 +117,9 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
                 Title = createTaskDto.Title,
                 Description = createTaskDto.Description,
                 AssignedTo = createTaskDto.AssignedTo,
-                AssignedBy = createTaskDto.AssignedBy,
+                AssignedBy = eid,
                 Priority = createTaskDto.Priority,
-                Status = createTaskDto.Status,
+                Status = "Pending",
                 Deadline = createTaskDto.Deadline,
                 CreatedAt = DateTime.UtcNow
             };
@@ -107,7 +145,7 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
         #endregion
 
         #region UpdateTask
-        [Authorize(Roles = "Admin,Manager")]
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
         public IActionResult UpdateTask(long id, UpdateTaskDto updateTaskDto)
         {
@@ -119,7 +157,7 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
 
             if (!context.Users.Any(user => user.Id == updateTaskDto.AssignedTo) || !context.Users.Any(user => user.Id == updateTaskDto.AssignedBy))
             {
-                return NotFound("Assigned user not found.");
+                return NotFound("user not found.");
             }
 
             task.Title = updateTaskDto.Title;
@@ -151,9 +189,15 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
 
         #region AssignTaks
         [Authorize(Roles = "Admin,Manager")]
-        [HttpPut("{id}/assign")]
+        [HttpPatch("{id}/assign")]
         public IActionResult AssignTask(long id, long AssignTo)
         {
+            var eid = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(eid, out var AssignBy))
+            {
+                return Unauthorized();
+            }
+
             var task = context.Tasks.FirstOrDefault(item => item.Id == id);
             if (task == null)
             {
@@ -164,6 +208,7 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
                 return NotFound("Assigned user not found.");
             }
             task.AssignedTo = (int)AssignTo;
+            task.AssignedBy= AssignBy;
             context.SaveChanges();
             var response = new ResponseTaskDto
             {
@@ -182,10 +227,44 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
         #endregion
 
         #region UpdateTaskStatus
+        [Authorize(Roles ="Admin,Manager")]
         [HttpPatch("{id}/{status}")]
         public IActionResult UpdateTaskStatus(int id,string status)
         {
             var task = context.Tasks.FirstOrDefault(item => item.Id == id);
+            if (task == null)
+            {
+                return NotFound();
+            }
+            task.Status = status;
+            context.SaveChanges();
+            var response = new ResponseTaskDto
+            {
+                Id = task.Id,
+                Title = task.Title,
+                Description = task.Description,
+                AssignedTo = task.AssignedTo,
+                AssignedBy = task.AssignedBy,
+                Priority = task.Priority,
+                Status = task.Status,
+                Deadline = task.Deadline,
+                CreatedAt = task.CreatedAt
+            };
+            return Ok(response);
+        }
+        #endregion
+
+        #region UpdateMyTaskStatus
+        [HttpPatch("my/{id}/{status}")]
+        public IActionResult UpdateMyTaskStatus(int id,string status)
+        {
+            var eid = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if(!int.TryParse(eid,out var empid))
+            {
+                return Unauthorized();
+            }
+
+            var task = context.Tasks.FirstOrDefault(item => item.Id == id&&item.AssignedTo==empid);
             if (task == null)
             {
                 return NotFound();
