@@ -19,20 +19,14 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
         }
 
         #region GetAllLeaves
-        [Authorize(Roles ="Admin,Manager")]
+        [Authorize(Roles = "Admin,Manager")]
         [HttpGet]
         public IActionResult GetLeaves()
         {
-            var leaves = context.Leaves.Select(leave => new ResponseLeafDto
-            {
-                Id = leave.Id,
-                EmployeeId = leave.EmployeeId,
-                LeaveType = leave.LeaveType,
-                StartDate = leave.StartDate,
-                EndDate = leave.EndDate,
-                Reason = leave.Reason,
-                Status = leave.Status
-            }).ToList();
+            var leaves = context.Leaves
+                .ToList()
+                .Select(ToResponseLeafDto)
+                .ToList();
 
             return Ok(leaves);
         }
@@ -43,23 +37,18 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
         public IActionResult GetLeaveById()
         {
             var Id = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if(!int.TryParse(Id,out var eid))
+            if (!int.TryParse(Id, out var eid))
             {
                 return Unauthorized();
             }
 
-            var leave = context.Leaves.Where(item => item.EmployeeId == eid).Select(item => new ResponseLeafDto
-            {
-                Id = item.Id,
-                EmployeeId = item.EmployeeId,
-                LeaveType = item.LeaveType,
-                StartDate = item.StartDate,
-                EndDate = item.EndDate,
-                Reason = item.Reason,
-                Status = item.Status
-            });
+            var leave = context.Leaves
+                .Where(item => item.EmployeeId == eid)
+                .ToList()
+                .Select(ToResponseLeafDto)
+                .ToList();
 
-            if (leave == null)
+            if (!leave.Any())
             {
                 return NotFound();
             }
@@ -69,27 +58,18 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
         #endregion
 
         #region GetLeaveById
-        [Authorize(Roles ="Admmin,Manager")]
+        [Authorize(Roles = "Admin,Manager")]
         [HttpGet("{id}")]
         public IActionResult GetLeaveById(long id)
         {
-            var leave = context.Leaves.Select(item => new ResponseLeafDto
-            {
-                Id = item.Id,
-                EmployeeId = item.EmployeeId,
-                LeaveType = item.LeaveType,
-                StartDate = item.StartDate,
-                EndDate = item.EndDate,
-                Reason = item.Reason,
-                Status = item.Status
-            }).FirstOrDefault(item => item.Id == id);
+            var leave = context.Leaves.FirstOrDefault(item => item.Id == id);
 
             if (leave == null)
             {
                 return NotFound();
             }
 
-            return Ok(leave);
+            return Ok(ToResponseLeafDto(leave));
         }
         #endregion
 
@@ -116,18 +96,7 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
             context.Leaves.Add(leave);
             context.SaveChanges();
 
-            var response = new ResponseLeafDto
-            {
-                Id = leave.Id,
-                EmployeeId = leave.EmployeeId,
-                LeaveType = leave.LeaveType,
-                StartDate = leave.StartDate,
-                EndDate = leave.EndDate,
-                Reason = leave.Reason,
-                Status = leave.Status
-            };
-
-            return Ok(response);
+            return Ok(ToResponseLeafDto(leave));
         }
         #endregion
 
@@ -135,8 +104,8 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
         [HttpPost("apply")]
         public IActionResult ApplyForLeave(ApplayLeaveDto applaydto)
         {
-            var id=User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if(!int.TryParse(id, out var Id))
+            var id = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(id, out var Id))
             {
                 return Unauthorized();
             }
@@ -152,17 +121,7 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
             context.Leaves.Add(leave);
             context.SaveChanges();
 
-            var response = new ResponseLeafDto
-            {
-                Id = leave.Id,
-                EmployeeId = leave.EmployeeId,
-                LeaveType = leave.LeaveType,
-                StartDate = leave.StartDate,
-                EndDate = leave.EndDate,
-                Reason = leave.Reason,
-                Status = leave.Status
-            };
-            return Ok(response);
+            return Ok(ToResponseLeafDto(leave));
         }
         #endregion
 
@@ -191,25 +150,15 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
 
             context.SaveChanges();
 
-            var response = new ResponseLeafDto
-            {
-                Id = leave.Id,
-                EmployeeId = leave.EmployeeId,
-                LeaveType = leave.LeaveType,
-                StartDate = leave.StartDate,
-                EndDate = leave.EndDate,
-                Reason = leave.Reason,
-                Status = leave.Status
-            };
-
-            return Ok(response);
+            return Ok(ToResponseLeafDto(leave));
         }
         #endregion
 
         #region ApproveLeave
         [Authorize(Roles = "Admin,Manager")]
         [HttpPatch("{id}/approve")]
-        public IActionResult ApproveLeave(int id) {
+        public IActionResult ApproveLeave(int id)
+        {
             var leave = context.Leaves.FirstOrDefault(item => item.Id == id);
             if (leave == null)
             {
@@ -218,18 +167,7 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
             leave.Status = "Approved";
             context.SaveChanges();
 
-            var response = new ResponseLeafDto
-            {
-                Id = leave.Id,
-                EmployeeId = leave.EmployeeId,
-                LeaveType = leave.LeaveType,
-                StartDate = leave.StartDate,
-                EndDate = leave.EndDate,
-                Reason = leave.Reason,
-                Status = leave.Status
-            };
-
-            return Ok(response);
+            return Ok(ToResponseLeafDto(leave));
         }
         #endregion
 
@@ -246,18 +184,7 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
             leave.Status = "Rejected";
             context.SaveChanges();
 
-            var response = new ResponseLeafDto
-            {
-                Id = leave.Id,
-                EmployeeId = leave.EmployeeId,
-                LeaveType = leave.LeaveType,
-                StartDate = leave.StartDate,
-                EndDate = leave.EndDate,
-                Reason = leave.Reason,
-                Status = leave.Status
-            };
-
-            return Ok(response);
+            return Ok(ToResponseLeafDto(leave));
         }
         #endregion
 
@@ -278,5 +205,22 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
             return NoContent();
         }
         #endregion
+
+        #region ResponseMapping
+        private static ResponseLeafDto ToResponseLeafDto(Leaf leave)
+        {
+            return new ResponseLeafDto
+            {
+                Id = leave.Id,
+                EmployeeId = leave.EmployeeId,
+                LeaveType = leave.LeaveType,
+                StartDate = leave.StartDate,
+                EndDate = leave.EndDate,
+                Reason = leave.Reason,
+                Status = leave.Status
+            };
+        }
+        #endregion
+
     }
 }

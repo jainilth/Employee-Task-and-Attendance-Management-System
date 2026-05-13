@@ -10,7 +10,7 @@ using System.Text;
 
 namespace Employee_Task_and_Attendance_Management_System.Controllers
 {
-    [Route("api/auth")]
+    [Route("api/[controller]")]
     [ApiController]
     [Authorize]
     public class AuthController : ControllerBase
@@ -43,7 +43,7 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
             }
 
             var token = GenerateToken(user);
-            return Ok(new { token, user.Id, user.Role });
+            return Ok(new { token, user = ToMeDto(user) });
         }
         #endregion
 
@@ -65,16 +65,7 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
                 return NotFound();
             }
 
-            var profile = new Me
-            {
-                Id = user.Id,
-                Name = user.Name,
-                Email = user.Email,
-                Role = user.Role,
-                DepartmentId = user.DepartmentId
-            };
-
-            return Ok(profile);
+            return Ok(ToMeDto(user));
         }
         #endregion
 
@@ -105,6 +96,20 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
                 );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+        #endregion
+
+        #region ResponseMapping
+        private static Me ToMeDto(User user)
+        {
+            return new Me
+            {
+                Id = user.Id,
+                Name = user.Name,
+                Email = user.Email,
+                Role = user.Role,
+                DepartmentId = user.DepartmentId
+            };
         }
         #endregion
     }

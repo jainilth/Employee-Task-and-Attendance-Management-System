@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Employee_Task_and_Attendance_Management_System.Controllers
 {
-    [Route("api/department")]
+    [Route("api/[controller]")]
     [ApiController]
     [Authorize]
     public class DepartmentController : ControllerBase
@@ -21,11 +21,11 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
         [HttpGet]
         public IActionResult GetDepartments()
         {
-            var departments = context.Departments.Select(d => new
-            {
-                d.Id,
-                d.Name
-            }).ToList();
+            var departments = context.Departments
+                .ToList()
+                .Select(ToResponseDepartmentDto)
+                .ToList();
+
             return Ok(departments);
         }
         #endregion
@@ -34,17 +34,14 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
         [HttpGet("{id}")]
         public IActionResult GetDepartmentById(int id)
         {
-            var department = context.Departments.Select(d => new
-            {
-                d.Id,
-                d.Name
-            }).FirstOrDefault(d => d.Id == id);
+            var department = context.Departments.FirstOrDefault(d => d.Id == id);
 
             if (department == null)
             {
                 return NotFound();
             }
-            return Ok(department);
+
+            return Ok(ToResponseDepartmentDto(department));
         }
         #endregion
 
@@ -59,12 +56,7 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
             };
             context.Departments.Add(department);
             context.SaveChanges();
-            var response = new ResponseDepartmentDto
-            {
-                Id = department.Id,
-                Name = department.Name
-            };
-            return Ok(response);
+            return Ok(ToResponseDepartmentDto(department));
         }
         #endregion
 
@@ -80,12 +72,7 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
             }
             department.Name = updateDepartmentDto.Name;
             context.SaveChanges();
-            var response = new ResponseDepartmentDto
-            {
-                Id = department.Id,
-                Name = department.Name
-            };
-            return Ok(response);
+            return Ok(ToResponseDepartmentDto(department));
         }
         #endregion
 
@@ -105,5 +92,17 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
 
         }
         #endregion
+
+        #region ResponseMapping
+        private static ResponseDepartmentDto ToResponseDepartmentDto(Department department)
+        {
+            return new ResponseDepartmentDto
+            {
+                Id = department.Id,
+                Name = department.Name
+            };
+        }
+        #endregion
     }
 }
+

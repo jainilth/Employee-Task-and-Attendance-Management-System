@@ -19,20 +19,14 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
         }
 
         #region GetAllAttendances
-        [Authorize(Roles ="Admin,Manager")]
+        [Authorize(Roles = "Admin,Manager")]
         [HttpGet]
         public IActionResult GetAttendances()
         {
-            var attendances = context.Attendances.Select(attendance => new ResponseAttendanceDto
-            {
-                Id = attendance.Id,
-                EmployeeId = attendance.EmployeeId,
-                CheckIn = attendance.CheckIn,
-                CheckOut = attendance.CheckOut,
-                WorkingHours = attendance.WorkingHours,
-                Status = attendance.Status,
-                Date = attendance.Date
-            }).ToList();
+            var attendances = context.Attendances
+                .ToList()
+                .Select(ToResponseAttendanceDto)
+                .ToList();
 
             return Ok(attendances);
         }
@@ -40,22 +34,19 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
 
         #region GetallAttendenceSelf
         [HttpGet("self")]
-        public IActionResult GetMyAttendance() {
-            var Id=User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if(!int.TryParse(Id, out var id))
+        public IActionResult GetMyAttendance()
+        {
+            var Id = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(Id, out var id))
             {
                 return Unauthorized();
             }
-            var Attendence = context.Attendances.Where(at => at.EmployeeId == id).Select(attendance => new ResponseAttendanceDto
-            {
-                Id = attendance.Id,
-                EmployeeId = attendance.EmployeeId,
-                CheckIn = attendance.CheckIn,
-                CheckOut = attendance.CheckOut,
-                WorkingHours = attendance.WorkingHours,
-                Status = attendance.Status,
-                Date = attendance.Date
-            }).ToList();
+            var Attendence = context.Attendances
+                .Where(at => at.EmployeeId == id)
+                .ToList()
+                .Select(ToResponseAttendanceDto)
+                .ToList();
+
             return Ok(Attendence);
         }
         #endregion
@@ -67,16 +58,8 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
         {
             var attendance = context.Attendances
                 .Where(item => item.EmployeeId == id)
-                .Select(item => new ResponseAttendanceDto
-                {
-                    Id = item.Id,
-                    EmployeeId = item.EmployeeId,
-                    CheckIn = item.CheckIn,
-                    CheckOut = item.CheckOut,
-                    WorkingHours = item.WorkingHours,
-                    Status = item.Status,
-                    Date = item.Date
-                })
+                .ToList()
+                .Select(ToResponseAttendanceDto)
                 .ToList();
 
             if (!attendance.Any())
@@ -95,16 +78,8 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
         {
             var attendance = context.Attendances
                 .Where(item => item.EmployeeId == id && item.Date == date)
-                .Select(item => new ResponseAttendanceDto
-                {
-                    Id = item.Id,
-                    EmployeeId = item.EmployeeId,
-                    CheckIn = item.CheckIn,
-                    CheckOut = item.CheckOut,
-                    WorkingHours = item.WorkingHours,
-                    Status = item.Status,
-                    Date = item.Date
-                })
+                .ToList()
+                .Select(ToResponseAttendanceDto)
                 .ToList();
 
             if (!attendance.Any())
@@ -123,16 +98,8 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
         {
             var attendance = context.Attendances
                 .Where(item => item.Status == status)
-                .Select(item => new ResponseAttendanceDto
-                {
-                    Id = item.Id,
-                    EmployeeId = item.EmployeeId,
-                    CheckIn = item.CheckIn,
-                    CheckOut = item.CheckOut,
-                    WorkingHours = item.WorkingHours,
-                    Status = item.Status,
-                    Date = item.Date
-                })
+                .ToList()
+                .Select(ToResponseAttendanceDto)
                 .ToList();
 
             if (!attendance.Any())
@@ -250,33 +217,22 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
             context.Attendances.Add(attendance);
             context.SaveChanges();
 
-            var response = new ResponseAttendanceDto
-            {
-                Id = attendance.Id,
-                EmployeeId = attendance.EmployeeId,
-                CheckIn = attendance.CheckIn,
-                CheckOut = attendance.CheckOut,
-                WorkingHours = attendance.WorkingHours,
-                Status = attendance.Status,
-                Date = attendance.Date
-            };
-
-            return Ok(response);
+            return Ok(ToResponseAttendanceDto(attendance));
         }
         #endregion
 
         #region UpdateAttendanceStatusOfEmployee
         [Authorize(Roles = "Admin,Manager")]
         [HttpPatch("{id:long}/employee/{date}/{status}")]
-        public IActionResult UpdateAttendance(long id,DateOnly date,string status)
+        public IActionResult UpdateAttendance(long id, DateOnly date, string status)
         {
             if (!context.Users.Any(u => u.Id == id))
             {
                 return NotFound("Employee not found.");
             }
 
-            var attendance =context.Attendances
-                .FirstOrDefault(a => a.EmployeeId == id&&a.Date==date);
+            var attendance = context.Attendances
+                .FirstOrDefault(a => a.EmployeeId == id && a.Date == date);
 
             if (attendance == null)
             {
@@ -303,18 +259,7 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
 
             context.SaveChanges();
 
-            var response = new ResponseAttendanceDto
-            {
-                Id = attendance.Id,
-                EmployeeId = attendance.EmployeeId,
-                CheckIn = attendance.CheckIn,
-                CheckOut = attendance.CheckOut,
-                WorkingHours = attendance.WorkingHours,
-                Status = attendance.Status,
-                Date = attendance.Date
-            };
-
-            return Ok(response);
+            return Ok(ToResponseAttendanceDto(attendance));
         }
         #endregion
 
@@ -336,7 +281,7 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
         }
         #endregion
 
-        #region Response
+        #region ResponseMapping
         private static ResponseAttendanceDto ToResponseAttendanceDto(Attendance attendance)
         {
             return new ResponseAttendanceDto

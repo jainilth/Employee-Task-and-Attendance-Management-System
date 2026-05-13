@@ -8,7 +8,7 @@ using System.Data;
 namespace Employee_Task_and_Attendance_Management_System.Controllers
 {
     [ApiController]
-    [Route("api/employee")]
+    [Route("api/[controller]")]
     [Authorize]
     public class UserController : ControllerBase
     {
@@ -24,14 +24,10 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
         [HttpGet]
         public IActionResult GetUsers()
         {
-            var users = context.Users.Select(user => new UserResponseDto
-            {
-                Id = user.Id,
-                Name = user.Name,
-                Email = user.Email,
-                Role = user.Role,
-                DepartmentId = user.DepartmentId
-            }).ToList();
+            var users = context.Users
+                .ToList()
+                .Select(ToUserResponseDto)
+                .ToList();
 
             return Ok(users);
         }
@@ -42,21 +38,14 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
         [HttpGet("{id}")]
         public IActionResult GetUserById(int id)
         {
-            var user = context.Users.Select(item => new UserResponseDto
-            {
-                Id = item.Id,
-                Name = item.Name,
-                Email = item.Email,
-                Role = item.Role,
-                DepartmentId = item.DepartmentId
-            }).FirstOrDefault(item => item.Id == id);
+            var user = context.Users.FirstOrDefault(item => item.Id == id);
 
             if (user == null)
             {
                 return NotFound();
             }
 
-            return Ok(user);
+            return Ok(ToUserResponseDto(user));
         }
         #endregion
 
@@ -82,16 +71,7 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
             context.Users.Add(user);
             context.SaveChanges();
 
-            var response = new UserResponseDto
-            {
-                Id = user.Id,
-                Name = user.Name,
-                Email = user.Email,
-                Role = user.Role,
-                DepartmentId = user.DepartmentId
-            };
-
-            return Ok(response);
+            return Ok(ToUserResponseDto(user));
         }
         #endregion
 
@@ -117,16 +97,7 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
             user.DepartmentId = userUpdateDto.DepartmentId;
             context.SaveChanges();
 
-            var response = new UserResponseDto
-            {
-                Id = user.Id,
-                Name = user.Name,
-                Email = user.Email,
-                Role = user.Role,
-                DepartmentId = user.DepartmentId
-            };
-
-            return Ok(response);
+            return Ok(ToUserResponseDto(user));
         }
         #endregion
 
@@ -151,7 +122,8 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
         #region AssignRole
         [Authorize(Roles = "Admin")]
         [HttpPatch("{id}/role")]
-        public IActionResult AssignRole(int id,string role) {
+        public IActionResult AssignRole(int id, string role)
+        {
             var user = context.Users.FirstOrDefault(item => item.Id == id);
             if (user == null)
             {
@@ -160,23 +132,15 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
             user.Role = role;
             context.SaveChanges();
 
-            var response = new UserResponseDto
-            {
-                Id = user.Id,
-                Name = user.Name,
-                Email = user.Email,
-                Role = user.Role,
-                DepartmentId = user.DepartmentId
-            };
-
-            return Ok(response);
+            return Ok(ToUserResponseDto(user));
         }
         #endregion
 
         #region AssignDepartment
         [Authorize(Roles = "Admin")]
         [HttpPatch("{id}/department")]
-        public IActionResult AssignDepartment(int id, int departmentId) {
+        public IActionResult AssignDepartment(int id, int departmentId)
+        {
             var user = context.Users.FirstOrDefault(item => item.Id == id);
             if (user == null)
             {
@@ -185,7 +149,14 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
             user.DepartmentId = departmentId;
             context.SaveChanges();
 
-            var response = new UserResponseDto
+            return Ok(ToUserResponseDto(user));
+        }
+        #endregion
+
+        #region ResponseMapping
+        private static UserResponseDto ToUserResponseDto(User user)
+        {
+            return new UserResponseDto
             {
                 Id = user.Id,
                 Name = user.Name,
@@ -193,9 +164,8 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
                 Role = user.Role,
                 DepartmentId = user.DepartmentId
             };
-
-            return Ok(response);
         }
         #endregion
     }
 }
+

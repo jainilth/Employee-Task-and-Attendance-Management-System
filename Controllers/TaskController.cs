@@ -20,22 +20,14 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
         }
 
         #region GetAllTasks
-        [Authorize(Roles ="Admin,Manager")]
+        [Authorize(Roles = "Admin,Manager")]
         [HttpGet]
         public IActionResult GetTasks()
         {
-            var tasks = context.Tasks.Select(task => new ResponseTaskDto
-            {
-                Id = task.Id,
-                Title = task.Title,
-                Description = task.Description,
-                AssignedTo = task.AssignedTo,
-                AssignedBy = task.AssignedBy,
-                Priority = task.Priority,
-                Status = task.Status,
-                Deadline = task.Deadline,
-                CreatedAt = task.CreatedAt
-            }).ToList();
+            var tasks = context.Tasks
+                .ToList()
+                .Select(ToResponseTaskDto)
+                .ToList();
 
             return Ok(tasks);
         }
@@ -52,20 +44,13 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
                 return Unauthorized();
             }
 
-            var tasks = context.Tasks.Where(item => item.AssignedTo == empid).Select(item => new ResponseTaskDto
-            {
-                Id = item.Id,
-                Title = item.Title,
-                Description = item.Description,
-                AssignedTo = item.AssignedTo,
-                AssignedBy = item.AssignedBy,
-                Priority = item.Priority,
-                Status = item.Status,
-                Deadline = item.Deadline,
-                CreatedAt = item.CreatedAt
-            });
-            
-            if (tasks == null)
+            var tasks = context.Tasks
+                .Where(item => item.AssignedTo == empid)
+                .ToList()
+                .Select(ToResponseTaskDto)
+                .ToList();
+
+            if (!tasks.Any())
             {
                 return NotFound();
             }
@@ -75,29 +60,18 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
         #endregion
 
         #region GetTaskById
-        [Authorize(Roles ="Admin,Manager")]
+        [Authorize(Roles = "Admin,Manager")]
         [HttpGet("{id}")]
         public IActionResult GetTaskById(long id)
         {
-            var task = context.Tasks.Select(item => new ResponseTaskDto
-            {
-                Id = item.Id,
-                Title = item.Title,
-                Description = item.Description,
-                AssignedTo = item.AssignedTo,
-                AssignedBy = item.AssignedBy,
-                Priority = item.Priority,
-                Status = item.Status,
-                Deadline = item.Deadline,
-                CreatedAt = item.CreatedAt
-            }).FirstOrDefault(item => item.Id == id);
+            var task = context.Tasks.FirstOrDefault(item => item.Id == id);
 
             if (task == null)
             {
                 return NotFound();
             }
 
-            return Ok(task);
+            return Ok(ToResponseTaskDto(task));
         }
         #endregion
 
@@ -107,7 +81,7 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
         public IActionResult CreateTask(CreateTaskDto createTaskDto)
         {
             var id = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if(!int.TryParse(id,out var eid))
+            if (!int.TryParse(id, out var eid))
             {
                 return Unauthorized();
             }
@@ -127,20 +101,7 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
             context.Tasks.Add(task);
             context.SaveChanges();
 
-            var response = new ResponseTaskDto
-            {
-                Id = task.Id,
-                Title = task.Title,
-                Description = task.Description,
-                AssignedTo = task.AssignedTo,
-                AssignedBy = task.AssignedBy,
-                Priority = task.Priority,
-                Status = task.Status,
-                Deadline = task.Deadline,
-                CreatedAt = task.CreatedAt
-            };
-
-            return Ok(response);
+            return Ok(ToResponseTaskDto(task));
         }
         #endregion
 
@@ -170,20 +131,7 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
 
             context.SaveChanges();
 
-            var response = new ResponseTaskDto
-            {
-                Id = task.Id,
-                Title = task.Title,
-                Description = task.Description,
-                AssignedTo = task.AssignedTo,
-                AssignedBy = task.AssignedBy,
-                Priority = task.Priority,
-                Status = task.Status,
-                Deadline = task.Deadline,
-                CreatedAt = task.CreatedAt
-            };
-
-            return Ok(response);
+            return Ok(ToResponseTaskDto(task));
         }
         #endregion
 
@@ -208,28 +156,16 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
                 return NotFound("Assigned user not found.");
             }
             task.AssignedTo = (int)AssignTo;
-            task.AssignedBy= AssignBy;
+            task.AssignedBy = AssignBy;
             context.SaveChanges();
-            var response = new ResponseTaskDto
-            {
-                Id = task.Id,
-                Title = task.Title,
-                Description = task.Description,
-                AssignedTo = task.AssignedTo,
-                AssignedBy = task.AssignedBy,
-                Priority = task.Priority,
-                Status = task.Status,
-                Deadline = task.Deadline,
-                CreatedAt = task.CreatedAt
-            };
-            return Ok(response);
+            return Ok(ToResponseTaskDto(task));
         }
         #endregion
 
         #region UpdateTaskStatus
-        [Authorize(Roles ="Admin,Manager")]
-        [HttpPatch("{id}/{status}")]
-        public IActionResult UpdateTaskStatus(int id,string status)
+        [Authorize(Roles = "Admin,Manager")]
+        [HttpPatch("{id:long}/{status}")]
+        public IActionResult UpdateTaskStatus(long id, string status)
         {
             var task = context.Tasks.FirstOrDefault(item => item.Id == id);
             if (task == null)
@@ -238,52 +174,28 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
             }
             task.Status = status;
             context.SaveChanges();
-            var response = new ResponseTaskDto
-            {
-                Id = task.Id,
-                Title = task.Title,
-                Description = task.Description,
-                AssignedTo = task.AssignedTo,
-                AssignedBy = task.AssignedBy,
-                Priority = task.Priority,
-                Status = task.Status,
-                Deadline = task.Deadline,
-                CreatedAt = task.CreatedAt
-            };
-            return Ok(response);
+            return Ok(ToResponseTaskDto(task));
         }
         #endregion
 
         #region UpdateMyTaskStatus
-        [HttpPatch("my/{id}/{status}")]
-        public IActionResult UpdateMyTaskStatus(int id,string status)
+        [HttpPatch("my/{id:long}/{status}")]
+        public IActionResult UpdateMyTaskStatus(long id, string status)
         {
             var eid = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if(!int.TryParse(eid,out var empid))
+            if (!int.TryParse(eid, out var empid))
             {
                 return Unauthorized();
             }
 
-            var task = context.Tasks.FirstOrDefault(item => item.Id == id&&item.AssignedTo==empid);
+            var task = context.Tasks.FirstOrDefault(item => item.Id == id && item.AssignedTo == empid);
             if (task == null)
             {
                 return NotFound();
             }
             task.Status = status;
             context.SaveChanges();
-            var response = new ResponseTaskDto
-            {
-                Id = task.Id,
-                Title = task.Title,
-                Description = task.Description,
-                AssignedTo = task.AssignedTo,
-                AssignedBy = task.AssignedBy,
-                Priority = task.Priority,
-                Status = task.Status,
-                Deadline = task.Deadline,
-                CreatedAt = task.CreatedAt
-            };
-            return Ok(response);
+            return Ok(ToResponseTaskDto(task));
         }
         #endregion
 
@@ -302,6 +214,24 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
             context.SaveChanges();
 
             return NoContent();
+        }
+        #endregion
+
+        #region ResponseMapping
+        private static ResponseTaskDto ToResponseTaskDto(Models.Task task)
+        {
+            return new ResponseTaskDto
+            {
+                Id = task.Id,
+                Title = task.Title,
+                Description = task.Description,
+                AssignedTo = task.AssignedTo,
+                AssignedBy = task.AssignedBy,
+                Priority = task.Priority,
+                Status = task.Status,
+                Deadline = task.Deadline,
+                CreatedAt = task.CreatedAt
+            };
         }
         #endregion
     }
