@@ -1,7 +1,9 @@
 namespace Employee_Task_and_Attendance_Management_System.DTOs.Leaves
 {
-    public class UpdateLeafDto
+    public class ResponseLeaveDto
     {
+        public long Id { get; set; }
+
         public int EmployeeId { get; set; }
 
         public string LeaveType { get; set; } = null!;

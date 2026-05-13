@@ -76,7 +76,7 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
         #region CreateLeave
         [Authorize(Roles = "Admin,Manager")]
         [HttpPost]
-        public IActionResult CreateLeave(CreateLeafDto createLeafDto)
+        public IActionResult CreateLeave(CreateLeaveDto createLeafDto)
         {
             if (!context.Users.Any(user => user.Id == createLeafDto.EmployeeId))
             {
@@ -102,7 +102,7 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
 
         #region ApplyForLeave
         [HttpPost("apply")]
-        public IActionResult ApplyForLeave(ApplayLeaveDto applaydto)
+        public IActionResult ApplyForLeave(ApplyLeaveDto applaydto)
         {
             var id = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (!int.TryParse(id, out var Id))
@@ -128,7 +128,7 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
         #region UpdateLeave
         [Authorize(Roles = "Admin")]
         [HttpPut("{id:long}")]
-        public IActionResult UpdateLeave(long id, UpdateLeafDto updateLeafDto)
+        public IActionResult UpdateLeave(long id, UpdateLeaveDto updateLeafDto)
         {
             var leave = context.Leaves.FirstOrDefault(item => item.Id == id);
             if (leave == null)
@@ -207,9 +207,9 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
         #endregion
 
         #region ResponseMapping
-        private static ResponseLeafDto ToResponseLeafDto(Leaf leave)
+        private static ResponseLeaveDto ToResponseLeafDto(Leaf leave)
         {
-            return new ResponseLeafDto
+            return new ResponseLeaveDto
             {
                 Id = leave.Id,
                 EmployeeId = leave.EmployeeId,

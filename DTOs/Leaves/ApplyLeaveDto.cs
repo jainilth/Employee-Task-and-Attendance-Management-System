@@ -1,6 +1,6 @@
 ﻿namespace Employee_Task_and_Attendance_Management_System.DTOs.Leaves
 {
-    public class ApplayLeaveDto
+    public class ApplyLeaveDto
     {
         public string LeaveType { get; set; } = null!;
 
