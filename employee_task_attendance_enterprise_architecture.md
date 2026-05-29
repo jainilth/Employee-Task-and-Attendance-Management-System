@@ -530,7 +530,7 @@ If you want this project to look professional in resume/interview:
 * Background jobs
 * Docker support
 * API versioning
-* Swagger documentation
+* Scalar API reference documentation
 * Global exception middleware
 * Multi-tenant support
 

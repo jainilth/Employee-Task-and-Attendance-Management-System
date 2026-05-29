@@ -208,7 +208,9 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
                 EmployeeId = createAttendanceDto.EmployeeId,
                 CheckIn = createAttendanceDto.CheckIn,
                 CheckOut = createAttendanceDto.CheckOut,
-                WorkingHours = Math.Round((decimal)(createAttendanceDto.CheckOut.Value - createAttendanceDto.CheckIn).TotalHours, 2),
+                WorkingHours = createAttendanceDto.CheckOut.HasValue
+                    ? Math.Round((decimal)(createAttendanceDto.CheckOut.Value - createAttendanceDto.CheckIn).TotalHours, 2)
+                    : null,
                 Status = createAttendanceDto.Status,
                 Date = createAttendanceDto.Date
             };

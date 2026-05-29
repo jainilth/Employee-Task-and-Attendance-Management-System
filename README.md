@@ -194,4 +194,4 @@ The application uses the following role values in both the code and SQL schema:
 
 - The project currently focuses on authentication, departments, users, attendance, tasks, and leaves.
 - There are no dedicated reporting, notification, or audit-log endpoints in the current controllers.
-- Swagger is enabled in development, and JWT bearer authentication is configured for the API.
+- Scalar is enabled in development on top of the generated OpenAPI document, and JWT bearer authentication is configured for the API.
