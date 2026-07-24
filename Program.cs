@@ -1,5 +1,7 @@
 using Employee_Task_and_Attendance_Management_System;
 using Employee_Task_and_Attendance_Management_System.Models;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -10,6 +12,8 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
+builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 builder.Services.AddOpenApi(options =>
 {

@@ -1,8 +1,10 @@
-﻿using BCrypt.Net;
+using BCrypt.Net;
+using Employee_Task_and_Attendance_Management_System.DTOs.Common;
 using Employee_Task_and_Attendance_Management_System.DTOs.User;
 using Employee_Task_and_Attendance_Management_System.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Data;
 
 namespace Employee_Task_and_Attendance_Management_System.Controllers
@@ -22,14 +24,58 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
         #region GetAllUsers
         [Authorize(Roles = "Admin,Manager")]
         [HttpGet]
-        public IActionResult GetUsers()
+        public IActionResult GetUsers([FromQuery] UserQueryParameters parameters)
         {
-            var users = context.Users
-                .ToList()
-                .Select(ToUserResponseDto)
+            var query = context.Users.AsNoTracking().AsQueryable();
+
+            if (!string.IsNullOrEmpty(parameters.Role))
+            {
+                query = query.Where(u => u.Role == parameters.Role);
+            }
+
+            if (parameters.DepartmentId.HasValue)
+            {
+                query = query.Where(u => u.DepartmentId == parameters.DepartmentId.Value);
+            }
+
+            if (!string.IsNullOrEmpty(parameters.SearchTerm))
+            {
+                query = query.Where(u => u.Name.Contains(parameters.SearchTerm) || u.Email.Contains(parameters.SearchTerm));
+            }
+
+            var totalRecords = query.Count();
+
+            if (!string.IsNullOrEmpty(parameters.SortBy))
+            {
+                query = parameters.SortBy.ToLower() switch
+                {
+                    "name" => parameters.IsDescending ? query.OrderByDescending(x => x.Name) : query.OrderBy(x => x.Name),
+                    "email" => parameters.IsDescending ? query.OrderByDescending(x => x.Email) : query.OrderBy(x => x.Email),
+                    "role" => parameters.IsDescending ? query.OrderByDescending(x => x.Role) : query.OrderBy(x => x.Role),
+                    _ => parameters.IsDescending ? query.OrderByDescending(x => x.Id) : query.OrderBy(x => x.Id)
+                };
+            }
+            else
+            {
+                query = query.OrderBy(x => x.Id);
+            }
+
+            var users = query
+                .Skip((parameters.PageNumber - 1) * parameters.PageSize)
+                .Take(parameters.PageSize)
+                .Select(user => new UserResponseDto
+                {
+                    Id = user.Id,
+                    Name = user.Name,
+                    Email = user.Email,
+                    Role = user.Role,
+                    DepartmentId = user.DepartmentId
+                })
                 .ToList();
 
-            return Ok(users);
+            var response = new PagedResponse<UserResponseDto>(users, totalRecords, parameters.PageNumber, parameters.PageSize);
+
+            return Ok(response);
         }
         #endregion
 

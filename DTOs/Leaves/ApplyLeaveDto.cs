@@ -1,4 +1,4 @@
-﻿namespace Employee_Task_and_Attendance_Management_System.DTOs.Leaves
+namespace Employee_Task_and_Attendance_Management_System.DTOs.Leaves
 {
     public class ApplyLeaveDto
     {

@@ -1,7 +1,9 @@
 using Employee_Task_and_Attendance_Management_System.DTOs.Attendance;
+using Employee_Task_and_Attendance_Management_System.DTOs.Common;
 using Employee_Task_and_Attendance_Management_System.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
 namespace Employee_Task_and_Attendance_Management_System.Controllers
@@ -21,40 +23,129 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
         #region GetAllAttendances
         [Authorize(Roles = "Admin,Manager")]
         [HttpGet]
-        public IActionResult GetAttendances()
+        public IActionResult GetAttendances([FromQuery] AttendanceQueryParameters parameters)
         {
-            var attendances = context.Attendances
-                .ToList()
-                .Select(ToResponseAttendanceDto)
+            var query = context.Attendances.AsNoTracking().AsQueryable();
+
+            if (parameters.EmployeeId.HasValue)
+            {
+                query = query.Where(a => a.EmployeeId == parameters.EmployeeId.Value);
+            }
+
+            if (parameters.Date.HasValue)
+            {
+                query = query.Where(a => a.Date == parameters.Date.Value);
+            }
+
+            if (!string.IsNullOrEmpty(parameters.Status))
+            {
+                query = query.Where(a => a.Status == parameters.Status);
+            }
+
+            var totalRecords = query.Count();
+
+            if (!string.IsNullOrEmpty(parameters.SortBy))
+            {
+                query = parameters.SortBy.ToLower() switch
+                {
+                    "date" => parameters.IsDescending ? query.OrderByDescending(x => x.Date) : query.OrderBy(x => x.Date),
+                    "checkin" => parameters.IsDescending ? query.OrderByDescending(x => x.CheckIn) : query.OrderBy(x => x.CheckIn),
+                    "checkout" => parameters.IsDescending ? query.OrderByDescending(x => x.CheckOut) : query.OrderBy(x => x.CheckOut),
+                    "status" => parameters.IsDescending ? query.OrderByDescending(x => x.Status) : query.OrderBy(x => x.Status),
+                    _ => parameters.IsDescending ? query.OrderByDescending(x => x.Id) : query.OrderBy(x => x.Id)
+                };
+            }
+            else
+            {
+                query = query.OrderBy(x => x.Id);
+            }
+
+            var attendances = query
+                .Skip((parameters.PageNumber - 1) * parameters.PageSize)
+                .Take(parameters.PageSize)
+                .Select(attendance => new ResponseAttendanceDto
+                {
+                    Id = attendance.Id,
+                    EmployeeId = attendance.EmployeeId,
+                    CheckIn = attendance.CheckIn,
+                    CheckOut = attendance.CheckOut,
+                    WorkingHours = attendance.WorkingHours,
+                    Status = attendance.Status,
+                    Date = attendance.Date
+                })
                 .ToList();
 
-            return Ok(attendances);
+            var response = new PagedResponse<ResponseAttendanceDto>(attendances, totalRecords, parameters.PageNumber, parameters.PageSize);
+
+            return Ok(response);
         }
         #endregion
 
         #region GetallAttendenceSelf
         [HttpGet("self")]
-        public IActionResult GetMyAttendance()
+        public IActionResult GetMyAttendance([FromQuery] AttendanceQueryParameters parameters)
         {
-            var Id = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (!int.TryParse(Id, out var id))
+            var IdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(IdClaim, out var id))
             {
                 return Unauthorized();
             }
-            var Attendence = context.Attendances
-                .Where(at => at.EmployeeId == id)
-                .ToList()
-                .Select(ToResponseAttendanceDto)
+
+            var query = context.Attendances.AsNoTracking().Where(at => at.EmployeeId == id).AsQueryable();
+
+            if (parameters.Date.HasValue)
+            {
+                query = query.Where(a => a.Date == parameters.Date.Value);
+            }
+
+            if (!string.IsNullOrEmpty(parameters.Status))
+            {
+                query = query.Where(a => a.Status == parameters.Status);
+            }
+
+            var totalRecords = query.Count();
+
+            if (!string.IsNullOrEmpty(parameters.SortBy))
+            {
+                query = parameters.SortBy.ToLower() switch
+                {
+                    "date" => parameters.IsDescending ? query.OrderByDescending(x => x.Date) : query.OrderBy(x => x.Date),
+                    "checkin" => parameters.IsDescending ? query.OrderByDescending(x => x.CheckIn) : query.OrderBy(x => x.CheckIn),
+                    "checkout" => parameters.IsDescending ? query.OrderByDescending(x => x.CheckOut) : query.OrderBy(x => x.CheckOut),
+                    "status" => parameters.IsDescending ? query.OrderByDescending(x => x.Status) : query.OrderBy(x => x.Status),
+                    _ => parameters.IsDescending ? query.OrderByDescending(x => x.Id) : query.OrderBy(x => x.Id)
+                };
+            }
+            else
+            {
+                query = query.OrderBy(x => x.Id);
+            }
+
+            var attendances = query
+                .Skip((parameters.PageNumber - 1) * parameters.PageSize)
+                .Take(parameters.PageSize)
+                .Select(attendance => new ResponseAttendanceDto
+                {
+                    Id = attendance.Id,
+                    EmployeeId = attendance.EmployeeId,
+                    CheckIn = attendance.CheckIn,
+                    CheckOut = attendance.CheckOut,
+                    WorkingHours = attendance.WorkingHours,
+                    Status = attendance.Status,
+                    Date = attendance.Date
+                })
                 .ToList();
 
-            return Ok(Attendence);
+            var response = new PagedResponse<ResponseAttendanceDto>(attendances, totalRecords, parameters.PageNumber, parameters.PageSize);
+
+            return Ok(response);
         }
         #endregion
 
         #region GetAttendancePerEmployee
         [Authorize(Roles = "Admin,Manager")]
-        [HttpGet("employee/{id:long}")]
-        public IActionResult GetAttendanceByEmployeeId(long id)
+        [HttpGet("employee/{id:int}")]
+        public IActionResult GetAttendanceByEmployeeId(int id)
         {
             var attendance = context.Attendances
                 .Where(item => item.EmployeeId == id)
@@ -73,8 +164,8 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
 
         #region GetAttendancePerEmployeeAndDate
         [Authorize(Roles = "Admin,Manager")]
-        [HttpGet("employee/{id:long}/{date}")]
-        public IActionResult GetAttendanceByEmployeeIdAndDate(long id, DateOnly date)
+        [HttpGet("employee/{id:int}/{date}")]
+        public IActionResult GetAttendanceByEmployeeIdAndDate(int id, DateOnly date)
         {
             var attendance = context.Attendances
                 .Where(item => item.EmployeeId == id && item.Date == date)

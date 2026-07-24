@@ -1,8 +1,10 @@
-﻿using Employee_Task_and_Attendance_Management_System.DTOs.Department;
+using Employee_Task_and_Attendance_Management_System.DTOs.Common;
+using Employee_Task_and_Attendance_Management_System.DTOs.Department;
 using Employee_Task_and_Attendance_Management_System.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Employee_Task_and_Attendance_Management_System.Controllers
 {
@@ -19,14 +21,43 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
 
         #region GetAllDepartments
         [HttpGet]
-        public IActionResult GetDepartments()
+        public IActionResult GetDepartments([FromQuery] DepartmentQueryParameters parameters)
         {
-            var departments = context.Departments
-                .ToList()
-                .Select(ToResponseDepartmentDto)
+            var query = context.Departments.AsNoTracking().AsQueryable();
+
+            if (!string.IsNullOrEmpty(parameters.SearchTerm))
+            {
+                query = query.Where(d => d.Name.Contains(parameters.SearchTerm));
+            }
+
+            var totalRecords = query.Count();
+
+            if (!string.IsNullOrEmpty(parameters.SortBy))
+            {
+                query = parameters.SortBy.ToLower() switch
+                {
+                    "name" => parameters.IsDescending ? query.OrderByDescending(x => x.Name) : query.OrderBy(x => x.Name),
+                    _ => parameters.IsDescending ? query.OrderByDescending(x => x.Id) : query.OrderBy(x => x.Id)
+                };
+            }
+            else
+            {
+                query = query.OrderBy(x => x.Id);
+            }
+
+            var departments = query
+                .Skip((parameters.PageNumber - 1) * parameters.PageSize)
+                .Take(parameters.PageSize)
+                .Select(department => new ResponseDepartmentDto
+                {
+                    Id = department.Id,
+                    Name = department.Name
+                })
                 .ToList();
 
-            return Ok(departments);
+            var response = new PagedResponse<ResponseDepartmentDto>(departments, totalRecords, parameters.PageNumber, parameters.PageSize);
+
+            return Ok(response);
         }
         #endregion
 

@@ -1,7 +1,9 @@
+using Employee_Task_and_Attendance_Management_System.DTOs.Common;
 using Employee_Task_and_Attendance_Management_System.DTOs.Leaves;
 using Employee_Task_and_Attendance_Management_System.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
 namespace Employee_Task_and_Attendance_Management_System.Controllers
@@ -21,31 +23,127 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
         #region GetAllLeaves
         [Authorize(Roles = "Admin,Manager")]
         [HttpGet]
-        public IActionResult GetLeaves()
+        public IActionResult GetLeaves([FromQuery] LeaveQueryParameters parameters)
         {
-            var leaves = context.Leaves
-                .ToList()
-                .Select(ToResponseLeafDto)
+            var query = context.Leaves.AsNoTracking().AsQueryable();
+
+            if (parameters.EmployeeId.HasValue)
+            {
+                query = query.Where(l => l.EmployeeId == parameters.EmployeeId.Value);
+            }
+
+            if (!string.IsNullOrEmpty(parameters.Status))
+            {
+                query = query.Where(l => l.Status == parameters.Status);
+            }
+
+            if (!string.IsNullOrEmpty(parameters.LeaveType))
+            {
+                query = query.Where(l => l.LeaveType == parameters.LeaveType);
+            }
+
+            if (!string.IsNullOrEmpty(parameters.SearchTerm))
+            {
+                query = query.Where(l => l.Reason != null && l.Reason.Contains(parameters.SearchTerm));
+            }
+
+            var totalRecords = query.Count();
+
+            if (!string.IsNullOrEmpty(parameters.SortBy))
+            {
+                query = parameters.SortBy.ToLower() switch
+                {
+                    "leavetype" => parameters.IsDescending ? query.OrderByDescending(x => x.LeaveType) : query.OrderBy(x => x.LeaveType),
+                    "startdate" => parameters.IsDescending ? query.OrderByDescending(x => x.StartDate) : query.OrderBy(x => x.StartDate),
+                    "enddate" => parameters.IsDescending ? query.OrderByDescending(x => x.EndDate) : query.OrderBy(x => x.EndDate),
+                    "status" => parameters.IsDescending ? query.OrderByDescending(x => x.Status) : query.OrderBy(x => x.Status),
+                    _ => parameters.IsDescending ? query.OrderByDescending(x => x.Id) : query.OrderBy(x => x.Id)
+                };
+            }
+            else
+            {
+                query = query.OrderBy(x => x.Id);
+            }
+
+            var leaves = query
+                .Skip((parameters.PageNumber - 1) * parameters.PageSize)
+                .Take(parameters.PageSize)
+                .Select(leave => new ResponseLeaveDto
+                {
+                    Id = leave.Id,
+                    EmployeeId = leave.EmployeeId,
+                    LeaveType = leave.LeaveType,
+                    StartDate = leave.StartDate,
+                    EndDate = leave.EndDate,
+                    Reason = leave.Reason,
+                    Status = leave.Status
+                })
                 .ToList();
 
-            return Ok(leaves);
+            var response = new PagedResponse<ResponseLeaveDto>(leaves, totalRecords, parameters.PageNumber, parameters.PageSize);
+
+            return Ok(response);
         }
         #endregion
 
         #region GetLeaveSelf
         [HttpGet("self")]
-        public IActionResult GetLeaveById()
+        public IActionResult GetMyLeaves([FromQuery] LeaveQueryParameters parameters)
         {
-            var Id = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (!int.TryParse(Id, out var eid))
+            var IdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(IdClaim, out var eid))
             {
                 return Unauthorized();
             }
 
-            var leave = context.Leaves
-                .Where(item => item.EmployeeId == eid)
-                .ToList()
-                .Select(ToResponseLeafDto)
+            var query = context.Leaves.AsNoTracking().Where(item => item.EmployeeId == eid).AsQueryable();
+
+            if (!string.IsNullOrEmpty(parameters.Status))
+            {
+                query = query.Where(l => l.Status == parameters.Status);
+            }
+
+            if (!string.IsNullOrEmpty(parameters.LeaveType))
+            {
+                query = query.Where(l => l.LeaveType == parameters.LeaveType);
+            }
+
+            if (!string.IsNullOrEmpty(parameters.SearchTerm))
+            {
+                query = query.Where(l => l.Reason != null && l.Reason.Contains(parameters.SearchTerm));
+            }
+
+            var totalRecords = query.Count();
+
+            if (!string.IsNullOrEmpty(parameters.SortBy))
+            {
+                query = parameters.SortBy.ToLower() switch
+                {
+                    "leavetype" => parameters.IsDescending ? query.OrderByDescending(x => x.LeaveType) : query.OrderBy(x => x.LeaveType),
+                    "startdate" => parameters.IsDescending ? query.OrderByDescending(x => x.StartDate) : query.OrderBy(x => x.StartDate),
+                    "enddate" => parameters.IsDescending ? query.OrderByDescending(x => x.EndDate) : query.OrderBy(x => x.EndDate),
+                    "status" => parameters.IsDescending ? query.OrderByDescending(x => x.Status) : query.OrderBy(x => x.Status),
+                    _ => parameters.IsDescending ? query.OrderByDescending(x => x.Id) : query.OrderBy(x => x.Id)
+                };
+            }
+            else
+            {
+                query = query.OrderBy(x => x.Id);
+            }
+
+            var leave = query
+                .Skip((parameters.PageNumber - 1) * parameters.PageSize)
+                .Take(parameters.PageSize)
+                .Select(leave => new ResponseLeaveDto
+                {
+                    Id = leave.Id,
+                    EmployeeId = leave.EmployeeId,
+                    LeaveType = leave.LeaveType,
+                    StartDate = leave.StartDate,
+                    EndDate = leave.EndDate,
+                    Reason = leave.Reason,
+                    Status = leave.Status
+                })
                 .ToList();
 
             if (!leave.Any())
@@ -53,7 +151,9 @@ namespace Employee_Task_and_Attendance_Management_System.Controllers
                 return NotFound();
             }
 
-            return Ok(leave);
+            var response = new PagedResponse<ResponseLeaveDto>(leave, totalRecords, parameters.PageNumber, parameters.PageSize);
+
+            return Ok(response);
         }
         #endregion
 
